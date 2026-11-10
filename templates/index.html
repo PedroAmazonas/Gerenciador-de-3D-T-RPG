@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>3D&T Alpha - Defensores de Tóquio</title>
+    <!-- Ligação ao CSS externo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>DEFENSORES DE TÓQUIO 3ª EDIÇÃO</h1>
+        <p>MANUAL ALPHA - SISTEMA DE FICHAS E COMBATE</p>
+    </header>
+
+    <nav>
+        <button onclick="mudarTab('hud')" class="active" id="btn-hud">⚔️ Arena de Combate</button>
+        <button onclick="mudarTab('criar')" id="btn-criar">✨ Forjar Personagem</button>
+        <button onclick="mudarTab('compendio')" id="btn-compendio">📚 Manual / Compêndio</button>
+    </nav>
+
+    <div class="container">
+
+        <!-- TAB ARENA DE COMBATE & FICHA -->
+        <div id="tab-hud" class="tab-content active">
+            <div class="hud-grid">
+                <div class="hud-sidebar">
+                    <h3 style="color:var(--3dt-blue-main); margin-top:0;">Personagens</h3>
+                    <div id="hud-lista-personagens">A carregar heróis...</div>
+                </div>
+                <div class="hud-main" id="hud-detalhes">
+                    <p style="text-align: center; color: var(--text-muted); margin-top: 50px;">Selecione um personagem ao lado para carregar a ficha oficial.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CRIAR PERSONAGEM -->
+        <div id="tab-criar" class="tab-content">
+            <div class="card">
+                <h3>Criar Novo Personagem</h3>
+                <form id="form-personagem">
+                    <div style="background: var(--3dt-blue-main); color: white; padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Nível de Poder:</strong> <span id="lbl-nivel-nome">-</span><br>
+                            <small>Pontos Iniciais: <span id="lbl-pontos-iniciais">0</span> pts | Limite Desvantagens: <span id="lbl-limite-desv">-</span></small>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 12px; opacity:0.9;">Balanço:</span><br>
+                            <span id="lbl-status-pontos" style="font-size: 18px; font-weight: 900; color: #2ecc71;">0 / 0 pts</span>
+                        </div>
+                    </div>
+
+                    <label>Nome do Personagem:</label>
+                    <input type="text" id="p-nome" required placeholder="Ex: Akira">
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <div style="flex: 1;"><label>Jogador:</label><select id="p-usuario" required></select></div>
+                        <div style="flex: 1;"><label>Nível de Poder:</label><select id="p-nivel" required onchange="calcularPontosCriacao()"></select></div>
+                    </div>
+
+                    <label>História / Conceito:</label>
+                    <textarea id="p-conceito" rows="2" placeholder="História resumida do herói..."></textarea>
+
+                    <h4>Características Base</h4>
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; text-align: center; margin-bottom: 15px;">
+                        <div style="background: #f1f2f6; padding: 8px; border-radius: 6px;"><label style="font-size: 11px; font-weight:900;">FORÇA</label><input type="number" id="p-forca" value="0" min="0" oninput="calcularPontosCriacao()"></div>
+                        <div style="background: #f1f2f6; padding: 8px; border-radius: 6px;"><label style="font-size: 11px; font-weight:900;">HABILIDADE</label><input type="number" id="p-habilidade" value="1" min="0" oninput="calcularPontosCriacao()"></div>
+                        <div style="background: #f1f2f6; padding: 8px; border-radius: 6px;"><label style="font-size: 11px; font-weight:900;">RESISTÊNCIA</label><input type="number" id="p-resistencia" value="1" min="0" oninput="calcularPontosCriacao()"></div>
+                        <div style="background: #f1f2f6; padding: 8px; border-radius: 6px;"><label style="font-size: 11px; font-weight:900;">ARMADURA</label><input type="number" id="p-armadura" value="0" min="0" oninput="calcularPontosCriacao()"></div>
+                        <div style="background: #f1f2f6; padding: 8px; border-radius: 6px;"><label style="font-size: 11px; font-weight:900;">PODER DE FOGO</label><input type="number" id="p-podertipo" value="0" min="0" oninput="calcularPontosCriacao()"></div>
+                    </div>
+
+                    <h4>Vantagens & Desvantagens Iniciais</h4>
+                    <div class="filter-bar">
+                        <label>Vantagens / Desvantagens</label>
+                        <div>
+                            <label>Ordenar por: </label>
+                            <select onchange="ordenarVantagensCriacao(this.value)">
+                                <option value="nome_asc">Nome (A - Z)</option>
+                                <option value="nome_desc">Nome (Z - A)</option>
+                                <option value="custo_desc">Maior Custo</option>
+                                <option value="custo_asc">Menor Custo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="criacao-vantagens-container" class="select-list-box"></div>
+
+                    <h4>Perícias Iniciais</h4>
+                    <div class="filter-bar">
+                        <label>Perícias</label>
+                        <div>
+                            <label>Ordenar por: </label>
+                            <select onchange="ordenarPericiasCriacao(this.value)">
+                                <option value="nome_asc">Nome (A - Z)</option>
+                                <option value="nome_desc">Nome (Z - A)</option>
+                                <option value="custo_desc">Maior Custo</option>
+                                <option value="custo_asc">Menor Custo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="criacao-pericias-container" class="select-list-box"></div>
+
+                    <button type="submit" class="btn" id="btn-submit-heroi">Guardar Personagem</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB COMPÊNDIO GERAL -->
+        <div id="tab-compendio" class="tab-content">
+            <div class="card">
+                <h3>👥 Cadastrar Novo Jogador / Mestre</h3>
+                <form id="form-usuario">
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:2;"><label>Nome Completo:</label><input type="text" id="u-nome" required placeholder="Ex: Pedro Sobral"></div>
+                        <div style="flex:2;"><label>E-mail:</label><input type="email" id="u-email" required placeholder="exemplo@email.com"></div>
+                        <div style="flex:1;">
+                            <label>Papel:</label>
+                            <select id="u-papel">
+                                <option value="JOGADOR">JOGADOR</option>
+                                <option value="MESTRE">MESTRE</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-green">Cadastrar Utilizador</button>
+                </form>
+                <div id="lista-usuarios" style="margin-top:15px;">A carregar utilizadores...</div>
+            </div>
+
+            <div class="card">
+                <h3>Cadastrar Vantagem ou Desvantagem</h3>
+                <form id="form-vantagem">
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:2;"><label>Nome:</label><input type="text" id="v-nome" required></div>
+                        <div style="flex:1;"><label>Tipo:</label><select id="v-tipo"><option value="VANTAGEM">Vantagem (+)</option><option value="DESVANTAGEM">Desvantagem (-)</option></select></div>
+                        <div style="flex:1;"><label>Custo:</label><input type="number" id="v-custo" required></div>
+                    </div>
+                    <label>Descrição:</label><textarea id="v-descricao" rows="2" required></textarea>
+                    <button type="submit" class="btn btn-sm">Guardar Vantagem</button>
+                </form>
+                <div id="lista-vantagens" style="margin-top:20px;">A carregar vantagens...</div>
+            </div>
+
+            <div class="card">
+                <h3>Cadastrar Nova Perícia</h3>
+                <form id="form-pericia">
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:3;"><label>Nome da Perícia:</label><input type="text" id="per-nome" required placeholder="Ex: Sobrevivência..."></div>
+                        <div style="flex:1;"><label>Custo (pts):</label><input type="number" id="per-custo" value="2" required></div>
+                    </div>
+                    <label>Descrição:</label><textarea id="per-descricao" rows="2" placeholder="O que esta perícia permite fazer..."></textarea>
+                    <button type="submit" class="btn btn-sm btn-cyan">Guardar Perícia</button>
+                </form>
+                <div id="lista-pericias" style="margin-top:20px;">A carregar perícias...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Ligação ao JavaScript externo -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
